@@ -25,7 +25,7 @@ public class OrderDomainServiceImpl implements OrderDomainService {
         order.validateOrder();
         order.initializeOrder();
         log.info("Order {} initiated", order.getId().getValue());
-        return new OrderCreatedEvent(order, ZonedDateTime.now(ZoneId.of("UTC")));
+        return new OrderCreatedEvent(order, ZonedDateTime.now(DEFAULT_ZONE));
     }
 
     private void setOrderProductInformation(Order order, Restaurant restaurant) {
@@ -47,7 +47,7 @@ public class OrderDomainServiceImpl implements OrderDomainService {
     public OrderPaidEvent payOrder(Order order) {
         order.pay();
         log.info("Order {} is paid", order.getId().getValue());
-        return new OrderPaidEvent(order, ZonedDateTime.now(ZoneId.of("UTC")));
+        return new OrderPaidEvent(order, ZonedDateTime.now(DEFAULT_ZONE));
     }
 
     @Override

@@ -19,7 +19,7 @@ class OrderApplicationServiceImpl implements OrderApplicationService {
     private final TrackOrderQueryHandler trackOrderQueryHandler;
 
     @Override
-    public CreateOrderCommand createOrder(CreateOrderCommand createOrderCommand) {
+    public CreateOrderResponse createOrder(CreateOrderCommand createOrderCommand) {
         return orderCreateCommandHandler.createOrder(createOrderCommand);
     }
 

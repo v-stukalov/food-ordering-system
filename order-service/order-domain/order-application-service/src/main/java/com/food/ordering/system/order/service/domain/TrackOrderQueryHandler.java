@@ -9,6 +9,6 @@ import org.springframework.stereotype.Component;
 @Component
 public class TrackOrderQueryHandler {
     public TrackOrderResponse trackOrder(TrackOrderQuery trackOrderQuery) {
-
+        return null;
     }
 }
