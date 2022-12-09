@@ -8,7 +8,7 @@ import org.springframework.validation.annotation.Validated;
 @Slf4j
 @Validated
 @Service
-public class RestaurantApprovalMessageListenerImpl implements RestaurantApprovalMessageListener {
+public class RestaurantApprovalResponseMessageListenerImpl implements RestaurantApprovalResponseMessageListener {
     @Override
     public void orderApproved(RestaurantApprovalResponse restaurantApprovalResponse) {
 
