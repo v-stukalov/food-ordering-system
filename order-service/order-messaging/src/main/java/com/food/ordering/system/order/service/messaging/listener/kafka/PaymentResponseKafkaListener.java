@@ -25,16 +25,16 @@ public class PaymentResponseKafkaListener implements KafkaConsumer<PaymentRespon
     @Override
     @KafkaListener(id = "${kafka-consumer-config.payment-consumer-group-id}", topics = "${order-service.payment-response-topic-name}")
     public void receive(@Payload List<PaymentResponseAvroModel> messages,
-                        @Header(KafkaHeaders.RECEIVED_KEY) List<Long> keys,
+                        @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
                         @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
                         @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
-        log.info("number of messages={}, keys={}, partitions={}, offsets={}",
+        log.info("number of payment responses={}, keys={}, partitions={}, offsets={}",
                 messages.size(), keys.toString(), partitions.toString(), offsets.toString());
         messages.forEach(paymentResponseAvroModel -> {
             if (PaymentStatus.COMPLETED == paymentResponseAvroModel.getPaymentStatus()) {
                 log.info("order {} payment successfully processed", paymentResponseAvroModel.getOrderId());
                 paymentResponseMessageListener.paymentCompleted(
-                        orderMessagingDataMapper.paymentResponseAvroModelTopaymentResponse(paymentResponseAvroModel));
+                        orderMessagingDataMapper.paymentResponseAvroModelToPaymentResponse(paymentResponseAvroModel));
             } else if (PaymentStatus.CANCELLED == paymentResponseAvroModel.getPaymentStatus()
                     || PaymentStatus.FAILED == paymentResponseAvroModel.getPaymentStatus()) {
                 log.info("order {} payment processing was unsuccessful", paymentResponseAvroModel.getOrderId());

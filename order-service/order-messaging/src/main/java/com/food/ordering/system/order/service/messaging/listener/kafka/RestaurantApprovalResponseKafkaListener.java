@@ -1,6 +1,7 @@
 package com.food.ordering.system.order.service.messaging.listener.kafka;
 
 import com.food.ordering.system.kafka.consumer.KafkaConsumer;
+import com.food.ordering.system.kafka.order.avro.model.OrderApprovalStatus;
 import com.food.ordering.system.kafka.order.avro.model.RestaurantApprovalResponseAvroModel;
 import com.food.ordering.system.order.service.domain.ports.input.message.listener.restaurantapproval.RestaurantApprovalResponseMessageListener;
 import com.food.ordering.system.order.service.messaging.mapper.OrderMessagingDataMapper;
@@ -14,6 +15,8 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
+import static com.food.ordering.system.order.service.domain.entity.Order.FAILURE_MESSAGE_DELIMITER;
+
 @Slf4j
 @Component
 @RequiredArgsConstructor
@@ -22,11 +25,27 @@ public class RestaurantApprovalResponseKafkaListener implements KafkaConsumer<Re
     private final OrderMessagingDataMapper orderMessagingDataMapper;
 
     @Override
-    @KafkaListener(id = "${kafka-consumer-config.restaurant-approval-consumer-group-id}", topics = "${restaurant-service.restaurant-approval-response-topic-name}")
+    @KafkaListener(id = "${kafka-consumer-config.restaurant-approval-consumer-group-id}", topics = "${order-service.restaurant-approval-response-topic-name}")
     public void receive(@Payload List<RestaurantApprovalResponseAvroModel> messages,
-                        @Header(KafkaHeaders.RECEIVED_KEY) List<Long> keys,
+                        @Header(KafkaHeaders.RECEIVED_KEY) List<String> keys,
                         @Header(KafkaHeaders.RECEIVED_PARTITION) List<Integer> partitions,
                         @Header(KafkaHeaders.OFFSET) List<Long> offsets) {
+        log.info("number of restaurant approvals={}, keys={}, partitions={}, offsets={}",
+                messages.size(), keys.toString(), partitions.toString(), offsets.toString());
 
+        messages.forEach(restaurantApprovalResponseAvroModel -> {
+            if(OrderApprovalStatus.APPROVED == restaurantApprovalResponseAvroModel.getOrderApprovalStatus()){
+                log.info("order {} restaurant approval successfully processed", restaurantApprovalResponseAvroModel.getOrderId());
+                restaurantApprovalResponseMessageListener.orderApproved(
+                        orderMessagingDataMapper.restaurantApprovalResponseAvroModelToRestaurantApprovalResponse(
+                                restaurantApprovalResponseAvroModel));
+            } else if (OrderApprovalStatus.REJECTED == restaurantApprovalResponseAvroModel.getOrderApprovalStatus()) {
+                log.info("order {} restaurant approval processing was failed with message(s)", restaurantApprovalResponseAvroModel.getOrderId(),
+                        String.join(FAILURE_MESSAGE_DELIMITER, restaurantApprovalResponseAvroModel.getFailureMessages()));
+                restaurantApprovalResponseMessageListener.orderRejected(
+                        orderMessagingDataMapper.restaurantApprovalResponseAvroModelToRestaurantApprovalResponse(
+                                restaurantApprovalResponseAvroModel));
+            }
+        });
     }
 }
